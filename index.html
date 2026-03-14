@@ -226,7 +226,10 @@
     <div class="prog-wrap">
       <div class="prog-top">
         <div class="prog-title">Your Progress</div>
-        <div class="prog-count" id="prog-count">0 / 0 pts</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <button class="btn btn-sm btn-ghost" onclick="refreshAchievements()" style="width:auto;padding:6px 14px;font-size:12px;letter-spacing:1px;margin-top:0;">↻ Refresh</button>
+          <div class="prog-count" id="prog-count">0 / 0</div>
+        </div>
       </div>
       <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
       <div style="display:flex;justify-content:space-between;margin-top:6px;">
@@ -382,6 +385,10 @@ function modDecide(idx,decision) {
   if(decision==='verify') showPopup(`${claim.user} unlocked "${a?.name}"!`);
   DB.claims=DB.claims.filter(c=>!(c.user===claim.user&&c.achId===claim.achId));
   saveDB(); renderModQueue();
+}
+function refreshAchievements() {
+  DB = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || freshDB();
+  renderAchievements();
 }
 function refreshModQueue() {
   DB = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || freshDB();
