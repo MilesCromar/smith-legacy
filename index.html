@@ -260,6 +260,11 @@
     </div>
     <div class="stat-row" id="mod-stats"></div>
     <div id="mod-queue"></div>
+    <div id="mod-accounts-section" style="display:none;margin:2rem 0 1rem;">
+      <div style="font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;letter-spacing:1px;color:var(--red);">Manage Accounts</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Delete student accounts</div>
+      <div id="mod-accounts"></div>
+    </div>
   </div>
 </div>
 
@@ -315,9 +320,12 @@ let pendingClaimId = null;
 let unsubscribeUser = null;
 let unsubscribeClaims = null;
 
-// Ensure mod account exists
+// Ensure mod accounts exist
 db.collection('users').doc('thecreator').get().then(doc => {
   if (!doc.exists) db.collection('users').doc('thecreator').set({ pass:'1234', isMod:true, period:null, claims:{} });
+});
+db.collection('users').doc('milesthegoat').get().then(doc => {
+  if (!doc.exists) db.collection('users').doc('milesthegoat').set({ pass:'7410', isMod:true, period:null, claims:{} });
 });
 
 function goto(id) { document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
@@ -359,6 +367,8 @@ function loginMod(u,data) {
   document.getElementById('mod-name-nav').textContent=u.toUpperCase();
   if(unsubscribeClaims) unsubscribeClaims();
   unsubscribeClaims=db.collection('claims').onSnapshot(()=>renderModQueue());
+  document.getElementById('mod-accounts-section').style.display=u==='milesthegoat'?'block':'none';
+  if(u==='milesthegoat') renderModAccounts();
   goto('page-mod');
 }
 function doLogout() {
@@ -429,6 +439,26 @@ async function renderModQueue() {
   usersSnap.forEach(doc=>{ const d=doc.data(); userMap[doc.id]=d; if(!d.isMod){totalStudents++; totalVerified+=Object.values(d.claims||{}).filter(v=>v==='verified').length;} });
   document.getElementById('mod-stats').innerHTML=`<div class="stat-box"><div class="stat-num">${pending.length}</div><div class="stat-lbl">Pending</div></div><div class="stat-box"><div class="stat-num">${totalVerified}</div><div class="stat-lbl">Verified</div></div><div class="stat-box"><div class="stat-num">${totalStudents}</div><div class="stat-lbl">Students</div></div>`;
   document.getElementById('mod-queue').innerHTML=pending.length?pending.map(c=>{const a=ACHIEVEMENTS.find(x=>x.id===c.achId),u=userMap[c.user];return`<div class="mod-card"><div class="mod-card-header"><div class="mod-student">${c.user}</div><div class="mod-period">${u?.period||'?'}</div></div><div class="mod-ach"><div class="mod-ach-icon">${a?.icon}</div><div><div class="mod-ach-name">${a?.name}</div><div class="mod-ach-desc">${a?.desc}</div></div></div><div class="mod-actions"><button class="btn btn-green btn-sm" onclick="modDecide('${c.id}','${c.user}','${c.achId}','verify')">✓ Verify</button><button class="btn btn-red btn-sm" onclick="modDecide('${c.id}','${c.user}','${c.achId}','deny')">✗ Deny</button></div></div>`;}).join(''):`<div class="empty-state"><div style="font-size:40px;margin-bottom:12px;">✅</div>All caught up! No pending claims.</div>`;
+}
+async function renderModAccounts() {
+  const snap=await db.collection('users').get();
+  const students=[];
+  snap.forEach(doc=>{ if(!doc.data().isMod) students.push({id:doc.id,...doc.data()}); });
+  students.sort((a,b)=>a.id.localeCompare(b.id));
+  document.getElementById('mod-accounts').innerHTML=students.length?students.map(s=>{
+    const count=Object.values(s.claims||{}).filter(v=>v==='verified').length;
+    return`<div class="mod-card" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;"><div style="display:flex;align-items:center;gap:12px;"><div class="avatar" style="width:34px;height:34px;font-size:14px;flex-shrink:0;">${s.id[0].toUpperCase()}</div><div><div style="font-size:15px;font-weight:500;">${s.id}</div><div style="font-size:11px;color:var(--muted);">${s.period||'No period'} · ${count} unlocked</div></div></div><button class="btn btn-red btn-sm" data-user="${s.id}" onclick="deleteAccount(this.dataset.user)">Delete</button></div>`;
+  }).join(''):`<div class="empty-state">No student accounts yet.</div>`;
+}
+async function deleteAccount(username) {
+  if(!confirm(`Delete account "${username}"? This cannot be undone.`)) return;
+  const batch=db.batch();
+  batch.delete(db.collection('users').doc(username));
+  const claimsSnap=await db.collection('claims').where('user','==',username).get();
+  claimsSnap.forEach(doc=>batch.delete(doc.ref));
+  await batch.commit();
+  renderModAccounts();
+  renderModQueue();
 }
 async function modDecide(claimDocId,user,achId,decision) {
   const a=ACHIEVEMENTS.find(x=>x.id===achId);
