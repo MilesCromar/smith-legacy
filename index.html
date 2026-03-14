@@ -213,13 +213,14 @@
 <!-- MAIN APP -->
 <div class="page" id="page-achievements">
   <nav class="nav">
-    <div class="nav-logo">SMITH LEGACY</div>
+    <div style="min-width:120px;display:flex;align-items:center;">
+      <button class="nav-tab" id="mod-tab-btn" style="display:none;" onclick="showTab('mod')">Mod Panel</button>
+    </div>
     <div class="nav-tabs">
       <button class="nav-tab active" onclick="showTab('achievements')">Achievements</button>
       <button class="nav-tab" onclick="showTab('leaderboard')">Leaderboard</button>
-      <button class="nav-tab" id="mod-tab-btn" style="display:none;" onclick="showTab('mod')">Mod Panel</button>
     </div>
-    <div class="nav-right">
+    <div class="nav-right" style="min-width:120px;justify-content:flex-end;">
       <div class="avatar" id="nav-avatar">?</div>
       <span class="logout" onclick="doLogout()">logout</span>
     </div>
@@ -377,8 +378,8 @@ function showTab(tab) {
   document.getElementById('tab-leaderboard').style.display=tab==='leaderboard'?'block':'none';
   document.getElementById('tab-mod').style.display=tab==='mod'?'block':'none';
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
-  if(tab==='achievements') document.querySelectorAll('.nav-tab')[0].classList.add('active');
-  if(tab==='leaderboard') document.querySelectorAll('.nav-tab')[1].classList.add('active');
+  if(tab==='achievements') document.querySelectorAll('.nav-tab[onclick*="achievements"]')[0].classList.add('active');
+  if(tab==='leaderboard') document.querySelectorAll('.nav-tab[onclick*="leaderboard"]')[0].classList.add('active');
   if(tab==='mod') document.getElementById('mod-tab-btn').classList.add('active');
   if(tab==='leaderboard') renderLeaderboard();
   if(tab==='mod') renderModQueue();
