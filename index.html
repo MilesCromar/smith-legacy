@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smith Legacy</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #0a0c10; color: #e8eaf0; min-height: 100vh; }
+    :root {
+      --accent: #7c3aed; --accent2: #a855f7; --gold: #f59e0b; --green: #10b981;
+      --red: #ef4444; --surface: #12151c; --surface2: #1a1d27; --border: rgba(255,255,255,0.08); --muted: #6b7280;
+    }
+    .page { display: none; min-height: 100vh; animation: fadeIn 0.3s ease; }
+    .page.active { display: flex; flex-direction: column; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    .bg-grid { position:fixed; inset:0; pointer-events:none; z-index:0; background-image:linear-gradient(rgba(124,58,237,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(124,58,237,0.03) 1px,transparent 1px); background-size:40px 40px; }
+    .bg-glow { position:fixed; top:-200px; left:50%; transform:translateX(-50%); width:600px; height:600px; pointer-events:none; z-index:0; background:radial-gradient(circle,rgba(124,58,237,0.12) 0%,transparent 70%); }
+    .container { max-width:480px; margin:0 auto; padding:2rem 1.5rem; position:relative; z-index:1; }
+    .container-wide { max-width:720px; margin:0 auto; padding:1.5rem; position:relative; z-index:1; }
+    .logo { font-family:'Rajdhani',sans-serif; font-size:32px; font-weight:700; letter-spacing:3px; text-transform:uppercase; background:linear-gradient(135deg,#a855f7,#7c3aed); -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-align:center; margin-bottom:4px; }
+    .logo-sub { text-align:center; font-size:11px; color:var(--muted); letter-spacing:4px; text-transform:uppercase; margin-bottom:2.5rem; }
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:2rem; }
+    .field { margin-bottom:1.25rem; }
+    .field label { display:block; font-size:12px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:6px; }
+    .field input, .field select { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:#e8eaf0; font-size:15px; outline:none; transition:border-color 0.2s; }
+    .field input:focus, .field select:focus { border-color:var(--accent2); }
+    .field select option { background:#1a1d27; }
+    .btn { display:block; width:100%; padding:12px; background:linear-gradient(135deg,#7c3aed,#a855f7); color:#fff; font-family:'Rajdhani',sans-serif; font-size:16px; font-weight:600; letter-spacing:2px; text-transform:uppercase; border:none; border-radius:8px; cursor:pointer; transition:opacity 0.2s,transform 0.1s; }
+    .btn:hover { opacity:0.9; } .btn:active { transform:scale(0.98); }
+    .btn-ghost { background:transparent; border:1px solid var(--border); color:var(--muted); margin-top:10px; }
+    .btn-ghost:hover { border-color:var(--accent2); color:var(--accent2); }
+    .btn-sm { display:inline-block; width:auto; padding:6px 16px; font-size:13px; letter-spacing:1px; border-radius:6px; }
+    .btn-green { background:linear-gradient(135deg,#059669,#10b981); }
+    .btn-red { background:linear-gradient(135deg,#b91c1c,#ef4444); }
+    .link-row { text-align:center; margin-top:1.25rem; font-size:13px; color:var(--muted); }
+    .link { color:var(--accent2); cursor:pointer; text-decoration:underline; }
+    .err { color:#ef4444; font-size:13px; text-align:center; margin-top:8px; min-height:18px; }
+    .nav { background:var(--surface); border-bottom:1px solid var(--border); padding:0 1.5rem; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; height:56px; }
+    .nav-logo { font-family:'Rajdhani',sans-serif; font-size:20px; font-weight:700; letter-spacing:2px; color:var(--accent2); }
+    .nav-tabs { display:flex; gap:4px; }
+    .nav-tab { padding:6px 14px; border-radius:6px; font-size:13px; color:var(--muted); cursor:pointer; border:none; background:transparent; transition:all 0.2s; }
+    .nav-tab:hover { color:#e8eaf0; background:var(--surface2); }
+    .nav-tab.active { color:var(--accent2); background:rgba(124,58,237,0.15); }
+    .nav-right { display:flex; align-items:center; gap:10px; }
+    .avatar { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,#7c3aed,#a855f7); display:flex; align-items:center; justify-content:center; font-family:'Rajdhani',sans-serif; font-weight:700; font-size:14px; color:#fff; }
+    .logout { cursor:pointer; color:var(--muted); font-size:12px; }
+    .logout:hover { color:var(--red); }
+
+    .ach-section-label { font-size:11px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; margin:1.5rem 0 8px; padding-left:2px; }
+    .ach-card { position:relative; overflow:hidden; background:linear-gradient(135deg,#1e1530 0%,#16111f 100%); border:1px solid rgba(168,85,247,0.15); border-radius:12px; margin-bottom:8px; display:flex; align-items:center; cursor:pointer; transition:border-color 0.2s,transform 0.15s; min-height:88px; }
+    .ach-card:hover { border-color:rgba(168,85,247,0.5); transform:translateY(-1px); }
+    .ach-card.done { background:linear-gradient(135deg,#0f2318,#0a1a12); border-color:rgba(16,185,129,0.25); }
+    .ach-card.done:hover { border-color:rgba(16,185,129,0.6); }
+    .ach-card.pending { background:linear-gradient(135deg,#1c1710,#14120b); border-color:rgba(245,158,11,0.25); }
+    .ach-card.pending:hover { transform:none; cursor:default; }
+    .ach-card::before { content:''; position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(168,85,247,0.06),transparent); transform:translateX(-100%); transition:transform 0.5s; }
+    .ach-card:hover::before { transform:translateX(100%); }
+    .ach-card-bar { width:4px; align-self:stretch; flex-shrink:0; background:rgba(168,85,247,0.4); }
+    .ach-card.done .ach-card-bar { background:var(--green); }
+    .ach-card.pending .ach-card-bar { background:var(--gold); }
+    .ach-card-icon-wrap { width:80px; height:88px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+    .ach-card-icon { width:56px; height:56px; border-radius:10px; background:linear-gradient(135deg,#2a1f4a,#1a1230); border:1px solid rgba(168,85,247,0.3); display:flex; align-items:center; justify-content:center; font-size:26px; position:relative; }
+    .ach-card.done .ach-card-icon { background:linear-gradient(135deg,#0f3a22,#0a2416); border-color:rgba(16,185,129,0.4); box-shadow:0 0 12px rgba(16,185,129,0.2); }
+    .ach-card.pending .ach-card-icon { background:linear-gradient(135deg,#3a2a0a,#251c07); border-color:rgba(245,158,11,0.4); }
+    .ach-rarity { position:absolute; bottom:-6px; left:50%; transform:translateX(-50%); font-size:10px; font-weight:600; padding:2px 7px; border-radius:999px; white-space:nowrap; letter-spacing:0.5px; }
+    .ach-card-body { flex:1; padding:16px 14px 16px 4px; }
+    .ach-card-label { font-size:10px; color:var(--muted); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:5px; }
+    .ach-card-label.verified { color:var(--green); }
+    .ach-card-label.pending-lbl { color:var(--gold); }
+    .ach-card-name { font-family:'Rajdhani',sans-serif; font-size:20px; font-weight:700; letter-spacing:0.5px; line-height:1.1; margin-bottom:4px; }
+    .ach-card-desc { font-size:12px; color:#8b949e; line-height:1.5; }
+    .ach-card-right { padding:0 16px 0 8px; display:flex; flex-direction:column; align-items:center; gap:8px; flex-shrink:0; }
+    .ach-pts { font-family:'Rajdhani',sans-serif; font-size:18px; font-weight:700; color:var(--gold); }
+    .ach-check-circle { width:26px; height:26px; border-radius:50%; border:2px solid rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; }
+    .ach-card.done .ach-check-circle { border-color:var(--green); background:var(--green); }
+    .ach-card.done .ach-check-circle::after { content:'✓'; font-size:13px; color:#fff; font-weight:700; }
+    .ach-card.pending .ach-check-circle { border-color:var(--gold); background:rgba(245,158,11,0.2); }
+    .ach-card.pending .ach-check-circle::after { content:'…'; font-size:11px; color:var(--gold); }
+
+    .prog-wrap { margin:1rem 0 1.5rem; }
+    .prog-top { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
+    .prog-title { font-family:'Rajdhani',sans-serif; font-size:14px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; }
+    .prog-count { font-family:'Rajdhani',sans-serif; font-size:22px; font-weight:700; color:var(--accent2); }
+    .prog-track { background:var(--surface2); border-radius:999px; height:6px; overflow:hidden; }
+    .prog-fill { height:100%; background:linear-gradient(90deg,#7c3aed,#a855f7); border-radius:999px; transition:width 0.6s ease; }
+
+    .modal-wrap { position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:100; display:none; align-items:center; justify-content:center; padding:1rem; }
+    .modal-wrap.open { display:flex; }
+    .modal { background:#16111f; border:1px solid rgba(168,85,247,0.4); border-radius:16px; padding:2rem; max-width:360px; width:100%; animation:fadeIn 0.2s ease; }
+    .modal-preview { display:flex; align-items:center; gap:14px; background:var(--surface2); border-radius:10px; padding:12px; margin-bottom:1.5rem; border:1px solid var(--border); }
+    .modal-icon-big { font-size:32px; width:52px; height:52px; display:flex; align-items:center; justify-content:center; background:#2a1f4a; border-radius:8px; border:1px solid rgba(168,85,247,0.3); flex-shrink:0; }
+    .modal-ach-name { font-family:'Rajdhani',sans-serif; font-size:20px; font-weight:700; }
+    .modal-ach-desc { font-size:12px; color:var(--muted); margin-top:3px; }
+    .modal-question { font-size:14px; color:#e8eaf0; text-align:center; margin-bottom:1.5rem; line-height:1.6; }
+    .modal-warning { font-size:12px; color:var(--muted); text-align:center; margin-bottom:1.5rem; }
+    .modal-btns { display:flex; gap:10px; }
+
+    .popup { position:fixed; bottom:1.5rem; right:1rem; z-index:200; background:#0f2318; border:1px solid rgba(16,185,129,0.5); border-radius:12px; padding:14px 18px; max-width:320px; display:none; animation:popUp 0.3s ease; }
+    .popup.show { display:block; }
+    @keyframes popUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    .popup-header { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+    .popup-title { font-family:'Rajdhani',sans-serif; font-size:14px; font-weight:700; color:var(--green); letter-spacing:1px; text-transform:uppercase; }
+    .popup-msg { font-size:12px; color:#6ee7b7; }
+
+    .lb-row { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:8px; display:flex; align-items:center; gap:14px; }
+    .lb-row.me { border-color:rgba(168,85,247,0.4); background:rgba(124,58,237,0.06); }
+    .lb-rank { font-family:'Rajdhani',sans-serif; font-size:22px; font-weight:700; width:30px; text-align:center; color:var(--muted); }
+    .lb-name { flex:1; font-size:14px; font-weight:500; }
+    .lb-period { font-size:11px; color:var(--muted); }
+    .lb-pts { font-family:'Rajdhani',sans-serif; font-size:20px; font-weight:700; color:var(--gold); }
+
+    .mod-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:10px; }
+    .mod-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .mod-student { font-size:15px; font-weight:500; }
+    .mod-period { font-size:11px; color:var(--muted); background:var(--surface2); padding:3px 8px; border-radius:999px; }
+    .mod-ach { display:flex; align-items:center; gap:10px; margin-bottom:12px; background:var(--surface2); border-radius:8px; padding:10px; }
+    .mod-ach-icon { font-size:22px; }
+    .mod-ach-name { font-family:'Rajdhani',sans-serif; font-size:16px; font-weight:700; }
+    .mod-ach-desc { font-size:11px; color:var(--muted); }
+    .mod-actions { display:flex; gap:8px; }
+    .stat-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:1.5rem; }
+    .stat-box { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px; text-align:center; }
+    .stat-num { font-family:'Rajdhani',sans-serif; font-size:28px; font-weight:700; color:var(--accent2); }
+    .stat-lbl { font-size:11px; color:var(--muted); margin-top:2px; text-transform:uppercase; letter-spacing:1px; }
+    .empty-state { text-align:center; padding:3rem; color:var(--muted); }
+  </style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<div class="popup" id="popup">
+  <div class="popup-header"><span style="font-size:16px;">🏆</span><span class="popup-title">Achievement Verified!</span></div>
+  <div class="popup-msg" id="popup-msg"></div>
+</div>
+
+<div class="modal-wrap" id="modal">
+  <div class="modal">
+    <div class="modal-preview" id="modal-preview"></div>
+    <div class="modal-question">Are you sure you want to claim this achievement?</div>
+    <div class="modal-warning">⚠️ A mod will review this. Only claim if you actually did it.</div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal()" style="font-size:14px;letter-spacing:1px;">Cancel</button>
+      <button class="btn" onclick="confirmClaim()">Yes, claim it</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div class="page active" id="page-login">
+  <div class="container" style="padding-top:4rem;">
+    <div class="logo">Smith Legacy</div>
+    <div class="logo-sub">Achievement System</div>
+    <div class="card">
+      <div style="font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:600;margin-bottom:1.5rem;letter-spacing:1px;">Sign in</div>
+      <div class="field"><label>Username</label><input id="login-user" type="text" placeholder="your username"></div>
+      <div class="field"><label>Password</label><input id="login-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="err" id="login-err"></div>
+      <button class="btn" onclick="doLogin()" style="margin-top:8px;">Sign in</button>
+    </div>
+    <div class="link-row">Don't have an account? <span class="link" onclick="goto('page-signup')">Sign up</span></div>
+    <div class="link-row" style="margin-top:8px;"><span class="link" onclick="goto('page-mod-login')" style="color:var(--muted);font-size:12px;">Moderator login →</span></div>
+  </div>
+</div>
+
+<!-- SIGNUP -->
+<div class="page" id="page-signup">
+  <div class="container" style="padding-top:4rem;">
+    <div class="logo">Smith Legacy</div>
+    <div class="logo-sub">Create Account</div>
+    <div class="card">
+      <div style="font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:600;margin-bottom:1.5rem;letter-spacing:1px;">Sign up</div>
+      <div class="field"><label>Username</label><input id="su-user" type="text" placeholder="choose a username"></div>
+      <div class="field"><label>Password</label><input id="su-pass" type="password" placeholder="••••••••"></div>
+      <div class="field"><label>Period</label>
+        <select id="su-period">
+          <option value="">Select your period</option>
+          <option>Period 1</option><option>Period 2</option><option>Period 3</option>
+          <option>Period 4</option><option>Period 5</option><option>Period 6</option>
+        </select>
+      </div>
+      <div class="err" id="su-err"></div>
+      <button class="btn" onclick="doSignup()" style="margin-top:8px;">Create account</button>
+    </div>
+    <div class="link-row">Already have an account? <span class="link" onclick="goto('page-login')">Sign in</span></div>
+  </div>
+</div>
+
+<!-- MOD LOGIN -->
+<div class="page" id="page-mod-login">
+  <div class="container" style="padding-top:4rem;">
+    <div class="logo">Smith Legacy</div>
+    <div class="logo-sub" style="color:#b45309;">Moderator Access</div>
+    <div class="card" style="border-color:rgba(245,158,11,0.2);">
+      <div style="font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:600;margin-bottom:4px;letter-spacing:1px;color:var(--gold);">MOD SIGN IN</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:1.5rem;">Moderators only — verify achievements here</div>
+      <div class="field"><label>Mod Username</label><input id="mod-user" type="text" placeholder="mod username"></div>
+      <div class="field"><label>Mod Password</label><input id="mod-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doModLogin()"></div>
+      <div class="err" id="mod-err"></div>
+      <button class="btn" onclick="doModLogin()" style="background:linear-gradient(135deg,#b45309,#f59e0b);margin-top:8px;">Mod sign in</button>
+    </div>
+    <div class="link-row"><span class="link" onclick="goto('page-login')" style="color:var(--muted);">← Back to login</span></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="page" id="page-achievements">
+  <nav class="nav">
+    <div class="nav-logo">SMITH LEGACY</div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="showTab('achievements')">Achievements</button>
+      <button class="nav-tab" onclick="showTab('leaderboard')">Leaderboard</button>
+    </div>
+    <div class="nav-right">
+      <div class="avatar" id="nav-avatar">?</div>
+      <span class="logout" onclick="doLogout()">logout</span>
+    </div>
+  </nav>
+  <div id="tab-achievements" class="container-wide">
+    <div class="prog-wrap">
+      <div class="prog-top">
+        <div class="prog-title">Your Progress</div>
+        <div class="prog-count" id="prog-count">0 / 0 pts</div>
+      </div>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px;">
+        <span style="font-size:11px;color:var(--muted);" id="prog-period"></span>
+        <span style="font-size:11px;color:var(--muted);" id="prog-done-label">0 of 12 unlocked</span>
+      </div>
+    </div>
+    <div id="ach-list"></div>
+  </div>
+  <div id="tab-leaderboard" class="container-wide" style="display:none;">
+    <div style="margin:1rem 0 1.5rem;">
+      <div style="font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;letter-spacing:1px;">Leaderboard</div>
+      <div style="font-size:13px;color:var(--muted);">Ranked by verified achievement points</div>
+    </div>
+    <div id="lb-list"></div>
+  </div>
+</div>
+
+<!-- MOD PANEL -->
+<div class="page" id="page-mod">
+  <nav class="nav" style="border-bottom-color:rgba(245,158,11,0.2);">
+    <div class="nav-logo" style="color:var(--gold);">MOD PANEL</div>
+    <div style="font-size:12px;color:var(--muted);" id="mod-name-nav"></div>
+    <span class="logout" onclick="doLogout()">logout</span>
+  </nav>
+  <div class="container-wide">
+    <div style="margin:1rem 0 1.5rem;">
+      <div style="font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;letter-spacing:1px;color:var(--gold);">Pending Approvals</div>
+      <div style="font-size:13px;color:var(--muted);">Review and verify student achievement claims</div>
+    </div>
+    <div class="stat-row" id="mod-stats"></div>
+    <div id="mod-queue"></div>
+  </div>
+</div>
+
+<script>
+const ACHIEVEMENTS = [
+  { id:'a1',  icon:'📚', name:'Started Early',      desc:'Actually opens the book before Mr. Smith says to', pts:10, rarity:'Common' },
+  { id:'a2',  icon:'✋', name:'First Hand Up',       desc:'First to raise your hand after a question is asked', pts:15, rarity:'Common' },
+  { id:'a3',  icon:'😴', name:'Almost Asleep',       desc:'Caught yourself (or almost) falling asleep in class', pts:5,  rarity:'Common' },
+  { id:'a4',  icon:'💬', name:'Side Quest',          desc:'Got Mr. Smith off topic for 2+ full minutes', pts:20, rarity:'Uncommon' },
+  { id:'a5',  icon:'🔁', name:'Repeat Offender',     desc:'Asked Mr. Smith to repeat something he just said', pts:5,  rarity:'Common' },
+  { id:'a6',  icon:'🎯', name:'Right on Time',       desc:'Gave the exact answer Mr. Smith was clearly looking for', pts:25, rarity:'Uncommon' },
+  { id:'a7',  icon:'🤔', name:'Big Brain Question',  desc:'Asked a question that made Mr. Smith pause and think', pts:20, rarity:'Uncommon' },
+  { id:'a8',  icon:'📝', name:'Speed Notes',         desc:'Filled an entire page of notes in one class', pts:15, rarity:'Common' },
+  { id:'a9',  icon:'🤫', name:'Dead Silence',        desc:'The whole class went quiet for an awkward 5+ seconds', pts:10, rarity:'Uncommon' },
+  { id:'a10', icon:'🏃', name:'Out the Door',        desc:'Fully packed up before the bell even rang', pts:5,  rarity:'Common' },
+  { id:'a11', icon:'😂', name:'Class Laughed',       desc:'Said something that made the whole class crack up', pts:30, rarity:'Rare' },
+  { id:'a12', icon:'🌟', name:'Mr. Smith Approved',  desc:'Earned a "great point" or "exactly right" from Mr. Smith', pts:35, rarity:'Rare' },
+];
+const RARITY_COLOR = { Common:'#6b7280', Uncommon:'#818cf8', Rare:'#f59e0b' };
+const STORAGE_KEY = 'smithLegacyDB';
+
+function freshDB() {
+  return { users: { thecreator: { pass:'1234', isMod:true, period:null, claims:{} } }, claims:[] };
+}
+
+let DB = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+if (!DB) { DB = freshDB(); saveDB(); }
+if (!DB.users['thecreator'] || !DB.users['thecreator'].isMod) {
+  DB.users['thecreator'] = { pass:'1234', isMod:true, period:null, claims:{} }; saveDB();
+}
+
+function saveDB() { localStorage.setItem(STORAGE_KEY, JSON.stringify(DB)); }
+
+let currentUser = null;
+let pendingClaimId = null;
+
+function goto(id) { document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
+
+function doSignup() {
+  const u=document.getElementById('su-user').value.trim().toLowerCase(), p=document.getElementById('su-pass').value, period=document.getElementById('su-period').value, err=document.getElementById('su-err');
+  if(!u||!p||!period){err.textContent='Please fill in all fields.';return;}
+  if(u==='thecreator'){err.textContent='That username is taken.';return;}
+  if(DB.users[u]){err.textContent='Username already taken.';return;}
+  DB.users[u]={pass:p,isMod:false,period,claims:{}}; saveDB(); loginAs(u);
+}
+function doLogin() {
+  const u=document.getElementById('login-user').value.trim().toLowerCase(), p=document.getElementById('login-pass').value, err=document.getElementById('login-err');
+  if(!DB.users[u]||DB.users[u].pass!==p){err.textContent='Wrong username or password.';return;}
+  if(DB.users[u].isMod){loginMod(u);return;} loginAs(u);
+}
+function doModLogin() {
+  const u=document.getElementById('mod-user').value.trim().toLowerCase(), p=document.getElementById('mod-pass').value, err=document.getElementById('mod-err');
+  if(!DB.users[u]||DB.users[u].pass!==p||!DB.users[u].isMod){err.textContent='Invalid mod credentials.';return;} loginMod(u);
+}
+function loginAs(u) { currentUser=u; document.getElementById('nav-avatar').textContent=u[0].toUpperCase(); renderAchievements(); goto('page-achievements'); }
+function loginMod(u) { currentUser=u; document.getElementById('mod-name-nav').textContent=u.toUpperCase(); renderModQueue(); goto('page-mod'); }
+function doLogout() { currentUser=null; document.getElementById('login-err').textContent=''; document.getElementById('login-user').value=''; document.getElementById('login-pass').value=''; goto('page-login'); }
+function showTab(tab) {
+  document.getElementById('tab-achievements').style.display=tab==='achievements'?'block':'none';
+  document.getElementById('tab-leaderboard').style.display=tab==='leaderboard'?'block':'none';
+  document.querySelectorAll('.nav-tab').forEach((t,i)=>t.classList.toggle('active',i===(tab==='achievements'?0:1)));
+  if(tab==='leaderboard') renderLeaderboard();
+}
+function getUserPts(u) { return Object.entries(DB.users[u]?.claims||{}).filter(([,v])=>v==='verified').reduce((s,[id])=>s+(ACHIEVEMENTS.find(a=>a.id===id)?.pts||0),0); }
+function renderAchievements() {
+  const claims=DB.users[currentUser]?.claims||{}, user=DB.users[currentUser];
+  const totalPts=ACHIEVEMENTS.reduce((s,a)=>s+a.pts,0), myPts=getUserPts(currentUser);
+  const verifiedCount=Object.values(claims).filter(v=>v==='verified').length;
+  document.getElementById('prog-fill').style.width=`${Math.round(myPts/totalPts*100)}%`;
+  document.getElementById('prog-count').textContent=`${myPts} / ${totalPts} pts`;
+  document.getElementById('prog-period').textContent=user?.period||'';
+  document.getElementById('prog-done-label').textContent=`${verifiedCount} of ${ACHIEVEMENTS.length} unlocked`;
+  const groups=[['Common',ACHIEVEMENTS.filter(a=>a.rarity==='Common')],['Uncommon',ACHIEVEMENTS.filter(a=>a.rarity==='Uncommon')],['Rare',ACHIEVEMENTS.filter(a=>a.rarity==='Rare')]];
+  let html='';
+  groups.forEach(([label,achs])=>{
+    html+=`<div class="ach-section-label" style="color:${RARITY_COLOR[label]}">${label}</div>`;
+    achs.forEach(a=>{
+      const status=claims[a.id], cls=status==='verified'?'done':status==='pending'?'pending':'', rc=RARITY_COLOR[a.rarity];
+      const labelHtml=status==='verified'?`<div class="ach-card-label verified">✓ Verified</div>`:status==='pending'?`<div class="ach-card-label pending-lbl">⏳ Awaiting mod</div>`:`<div class="ach-card-label">Achievement</div>`;
+      html+=`<div class="ach-card ${cls}" onclick="tryClaimAch('${a.id}')"><div class="ach-card-bar"></div><div class="ach-card-icon-wrap"><div class="ach-card-icon">${a.icon}<div class="ach-rarity" style="background:${rc}22;color:${rc};">${a.rarity}</div></div></div><div class="ach-card-body">${labelHtml}<div class="ach-card-name">${a.name}</div><div class="ach-card-desc">${a.desc}</div></div><div class="ach-card-right"><div class="ach-pts">+${a.pts}</div><div class="ach-check-circle"></div></div></div>`;
+    });
+  });
+  document.getElementById('ach-list').innerHTML=html;
+}
+function tryClaimAch(id) {
+  const claims=DB.users[currentUser]?.claims||{}; if(claims[id]) return;
+  const a=ACHIEVEMENTS.find(x=>x.id===id); pendingClaimId=id;
+  document.getElementById('modal-preview').innerHTML=`<div class="modal-icon-big">${a.icon}</div><div><div class="modal-ach-name">${a.name}</div><div class="modal-ach-desc">${a.desc}</div><div style="margin-top:6px;font-family:'Rajdhani',sans-serif;font-size:14px;color:var(--gold);">+${a.pts} pts</div></div>`;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() { document.getElementById('modal').classList.remove('open'); pendingClaimId=null; }
+function confirmClaim() {
+  if(!pendingClaimId) return;
+  if(!DB.users[currentUser].claims) DB.users[currentUser].claims={};
+  DB.users[currentUser].claims[pendingClaimId]='pending';
+  DB.claims.push({user:currentUser,achId:pendingClaimId,time:Date.now()});
+  saveDB(); closeModal(); renderAchievements();
+}
+function renderLeaderboard() {
+  const rows=Object.entries(DB.users).filter(([,d])=>!d.isMod).map(([u,d])=>({u,pts:getUserPts(u),count:Object.values(d.claims||{}).filter(v=>v==='verified').length,period:d.period})).sort((a,b)=>b.pts-a.pts);
+  const medals=['🥇','🥈','🥉'];
+  document.getElementById('lb-list').innerHTML=rows.length?rows.map((r,i)=>`<div class="lb-row ${r.u===currentUser?'me':''}"><div class="lb-rank">${medals[i]||i+1}</div><div class="avatar" style="width:34px;height:34px;font-size:14px;">${r.u[0].toUpperCase()}</div><div class="lb-name">${r.u}${r.u===currentUser?' <span style="font-size:11px;color:var(--accent2);background:rgba(124,58,237,0.15);padding:2px 8px;border-radius:999px;">you</span>':''}<div class="lb-period">${r.period||''} · ${r.count} achievement${r.count!==1?'s':''}</div></div><div class="lb-pts">${r.pts} pts</div></div>`).join(''):`<div class="empty-state">No scores yet — go earn some achievements!</div>`;
+}
+function renderModQueue() {
+  const pending=DB.claims.filter(c=>DB.users[c.user]?.claims?.[c.achId]==='pending');
+  const totalVerified=Object.values(DB.users).reduce((s,u)=>s+Object.values(u.claims||{}).filter(v=>v==='verified').length,0);
+  const totalStudents=Object.keys(DB.users).filter(u=>!DB.users[u].isMod).length;
+  document.getElementById('mod-stats').innerHTML=`<div class="stat-box"><div class="stat-num">${pending.length}</div><div class="stat-lbl">Pending</div></div><div class="stat-box"><div class="stat-num">${totalVerified}</div><div class="stat-lbl">Verified</div></div><div class="stat-box"><div class="stat-num">${totalStudents}</div><div class="stat-lbl">Students</div></div>`;
+  document.getElementById('mod-queue').innerHTML=pending.length?pending.map((c,i)=>{const a=ACHIEVEMENTS.find(x=>x.id===c.achId),user=DB.users[c.user];return`<div class="mod-card"><div class="mod-card-header"><div class="mod-student">${c.user}</div><div class="mod-period">${user?.period||'?'}</div></div><div class="mod-ach"><div class="mod-ach-icon">${a?.icon}</div><div><div class="mod-ach-name">${a?.name} <span style="color:var(--gold);font-size:14px;">+${a?.pts}pts</span></div><div class="mod-ach-desc">${a?.desc}</div></div></div><div class="mod-actions"><button class="btn btn-green btn-sm" onclick="modDecide(${i},'verify')">✓ Verify</button><button class="btn btn-red btn-sm" onclick="modDecide(${i},'deny')">✗ Deny</button></div></div>`;}).join(''):`<div class="empty-state"><div style="font-size:40px;margin-bottom:12px;">✅</div>All caught up! No pending claims.</div>`;
+}
+function modDecide(idx,decision) {
+  const pending=DB.claims.filter(c=>DB.users[c.user]?.claims?.[c.achId]==='pending');
+  const claim=pending[idx]; if(!claim) return;
+  const a=ACHIEVEMENTS.find(x=>x.id===claim.achId);
+  DB.users[claim.user].claims[claim.achId]=decision==='verify'?'verified':'denied';
+  if(decision==='verify') showPopup(`${claim.user} earned "${a?.name}" — +${a?.pts}pts`);
+  DB.claims=DB.claims.filter(c=>!(c.user===claim.user&&c.achId===claim.achId));
+  saveDB(); renderModQueue();
+}
+function showPopup(msg) {
+  const p=document.getElementById('popup'); document.getElementById('popup-msg').textContent=msg;
+  p.classList.add('show'); setTimeout(()=>p.classList.remove('show'),4500);
+}
+</script>
+</body>
+</html>
