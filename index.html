@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Smith Legacy</title>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" id="favicon">
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -396,6 +396,19 @@ function refreshModQueue() {
   DB = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || freshDB();
   renderModQueue();
 }
+document.fonts.ready.then(() => {
+  const c = document.createElement('canvas'); c.width = 64; c.height = 64;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#0a1219'; ctx.fillRect(0, 0, 64, 64);
+  const glow = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  glow.addColorStop(0, 'rgba(61,110,138,0.4)'); glow.addColorStop(1, 'rgba(61,110,138,0)');
+  ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(32, 32, 32, 0, Math.PI*2); ctx.fill();
+  const grad = ctx.createLinearGradient(0, 0, 64, 64);
+  grad.addColorStop(0, '#a8d8f0'); grad.addColorStop(1, '#5a9fcc');
+  ctx.fillStyle = grad; ctx.font = '700 54px Rajdhani'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('S', 32, 34);
+  document.getElementById('favicon').href = c.toDataURL();
+});
 function showPopup(msg) {
   const p=document.getElementById('popup'); document.getElementById('popup-msg').textContent=msg;
   p.classList.add('show'); setTimeout(()=>p.classList.remove('show'),4500);
