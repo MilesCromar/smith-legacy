@@ -217,6 +217,7 @@
     <div class="nav-tabs">
       <button class="nav-tab active" onclick="showTab('achievements')">Achievements</button>
       <button class="nav-tab" onclick="showTab('leaderboard')">Leaderboard</button>
+      <button class="nav-tab" id="mod-tab-btn" style="display:none;" onclick="showTab('mod')">Mod Panel</button>
     </div>
     <div class="nav-right">
       <div class="avatar" id="nav-avatar">?</div>
@@ -244,16 +245,7 @@
     </div>
     <div id="lb-list"></div>
   </div>
-</div>
-
-<!-- MOD PANEL -->
-<div class="page" id="page-mod">
-  <nav class="nav" style="border-bottom-color:rgba(245,158,11,0.2);">
-    <div class="nav-logo" style="color:var(--gold);">MOD PANEL</div>
-    <div style="font-size:12px;color:var(--muted);" id="mod-name-nav"></div>
-    <span class="logout" onclick="doLogout()">logout</span>
-  </nav>
-  <div class="container-wide">
+  <div id="tab-mod" class="container-wide" style="display:none;">
     <div style="margin:1rem 0 1.5rem;">
       <div style="font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;letter-spacing:1px;color:var(--gold);">Pending Approvals</div>
       <div style="font-size:13px;color:var(--muted);">Review and verify student achievement claims</div>
@@ -363,18 +355,18 @@ function loginAs(u,data) {
   goto('page-achievements');
 }
 function loginMod(u,data) {
-  currentUser=u;
-  document.getElementById('mod-name-nav').textContent=u.toUpperCase();
   if(unsubscribeClaims) unsubscribeClaims();
-  unsubscribeClaims=db.collection('claims').onSnapshot(()=>renderModQueue());
+  unsubscribeClaims=db.collection('claims').onSnapshot(()=>{ if(document.getElementById('tab-mod').style.display!=='none') renderModQueue(); });
+  document.getElementById('mod-tab-btn').style.display='';
   document.getElementById('mod-accounts-section').style.display=u==='milesthegoat'?'block':'none';
   if(u==='milesthegoat') renderModAccounts();
-  goto('page-mod');
+  loginAs(u,data);
 }
 function doLogout() {
   if(unsubscribeUser){unsubscribeUser();unsubscribeUser=null;}
   if(unsubscribeClaims){unsubscribeClaims();unsubscribeClaims=null;}
   currentUser=null; currentUserData=null;
+  document.getElementById('mod-tab-btn').style.display='none';
   document.getElementById('login-err').textContent='';
   document.getElementById('login-user').value='';
   document.getElementById('login-pass').value='';
@@ -383,8 +375,13 @@ function doLogout() {
 function showTab(tab) {
   document.getElementById('tab-achievements').style.display=tab==='achievements'?'block':'none';
   document.getElementById('tab-leaderboard').style.display=tab==='leaderboard'?'block':'none';
-  document.querySelectorAll('.nav-tab').forEach((t,i)=>t.classList.toggle('active',i===(tab==='achievements'?0:1)));
+  document.getElementById('tab-mod').style.display=tab==='mod'?'block':'none';
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  if(tab==='achievements') document.querySelectorAll('.nav-tab')[0].classList.add('active');
+  if(tab==='leaderboard') document.querySelectorAll('.nav-tab')[1].classList.add('active');
+  if(tab==='mod') document.getElementById('mod-tab-btn').classList.add('active');
   if(tab==='leaderboard') renderLeaderboard();
+  if(tab==='mod') renderModQueue();
 }
 function renderAchievements() {
   const claims=currentUserData?.claims||{};
