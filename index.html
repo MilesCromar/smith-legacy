@@ -227,10 +227,7 @@
     <div class="prog-wrap">
       <div class="prog-top">
         <div class="prog-title">Your Progress</div>
-        <div style="display:flex;align-items:center;gap:12px;">
-          <button class="btn btn-sm btn-ghost" onclick="refreshAchievements()" style="width:auto;padding:6px 14px;font-size:12px;letter-spacing:1px;margin-top:0;">↻ Refresh</button>
-          <div class="prog-count" id="prog-count">0 / 0</div>
-        </div>
+        <div class="prog-count" id="prog-count">0 / 0</div>
       </div>
       <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
       <div style="display:flex;justify-content:space-between;margin-top:6px;">
@@ -241,12 +238,9 @@
     <div id="ach-list"></div>
   </div>
   <div id="tab-leaderboard" class="container-wide" style="display:none;">
-    <div style="margin:1rem 0 1.5rem;display:flex;align-items:center;justify-content:space-between;">
-      <div>
-        <div style="font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;letter-spacing:1px;">Leaderboard</div>
-        <div style="font-size:13px;color:var(--muted);">Ranked by achievements unlocked</div>
-      </div>
-      <button class="btn btn-sm btn-ghost" onclick="renderLeaderboard()" style="width:auto;padding:6px 14px;font-size:12px;letter-spacing:1px;">↻ Refresh</button>
+    <div style="margin:1rem 0 1.5rem;">
+      <div style="font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;letter-spacing:1px;">Leaderboard</div>
+      <div style="font-size:13px;color:var(--muted);">Ranked by achievements unlocked</div>
     </div>
     <div id="lb-list"></div>
   </div>
@@ -260,12 +254,9 @@
     <span class="logout" onclick="doLogout()">logout</span>
   </nav>
   <div class="container-wide">
-    <div style="margin:1rem 0 1.5rem;display:flex;align-items:center;justify-content:space-between;">
-      <div>
-        <div style="font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;letter-spacing:1px;color:var(--gold);">Pending Approvals</div>
-        <div style="font-size:13px;color:var(--muted);">Review and verify student achievement claims</div>
-      </div>
-      <button class="btn btn-sm btn-ghost" onclick="refreshModQueue()" style="width:auto;padding:6px 14px;font-size:12px;letter-spacing:1px;">↻ Refresh</button>
+    <div style="margin:1rem 0 1.5rem;">
+      <div style="font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;letter-spacing:1px;color:var(--gold);">Pending Approvals</div>
+      <div style="font-size:13px;color:var(--muted);">Review and verify student achievement claims</div>
     </div>
     <div class="stat-row" id="mod-stats"></div>
     <div id="mod-queue"></div>
