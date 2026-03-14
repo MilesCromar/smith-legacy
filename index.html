@@ -319,13 +319,12 @@ function showTab(tab) {
   document.querySelectorAll('.nav-tab').forEach((t,i)=>t.classList.toggle('active',i===(tab==='achievements'?0:1)));
   if(tab==='leaderboard') renderLeaderboard();
 }
-function getUserPts(u) { return Object.entries(DB.users[u]?.claims||{}).filter(([,v])=>v==='verified').reduce((s,[id])=>s+(ACHIEVEMENTS.find(a=>a.id===id)?.pts||0),0); }
+function getUserCount(u) { return Object.values(DB.users[u]?.claims||{}).filter(v=>v==='verified').length; }
 function renderAchievements() {
   const claims=DB.users[currentUser]?.claims||{}, user=DB.users[currentUser];
-  const totalPts=ACHIEVEMENTS.reduce((s,a)=>s+a.pts,0), myPts=getUserPts(currentUser);
   const verifiedCount=Object.values(claims).filter(v=>v==='verified').length;
-  document.getElementById('prog-fill').style.width=`${Math.round(myPts/totalPts*100)}%`;
-  document.getElementById('prog-count').textContent=`${myPts} / ${totalPts} pts`;
+  document.getElementById('prog-fill').style.width=`${Math.round(verifiedCount/ACHIEVEMENTS.length*100)}%`;
+  document.getElementById('prog-count').textContent=`${verifiedCount} / ${ACHIEVEMENTS.length} unlocked`;
   document.getElementById('prog-period').textContent=user?.period||'';
   document.getElementById('prog-done-label').textContent=`${verifiedCount} of ${ACHIEVEMENTS.length} unlocked`;
   const groups=[['Common',ACHIEVEMENTS.filter(a=>a.rarity==='Common')],['Uncommon',ACHIEVEMENTS.filter(a=>a.rarity==='Uncommon')],['Rare',ACHIEVEMENTS.filter(a=>a.rarity==='Rare')]];
@@ -335,7 +334,7 @@ function renderAchievements() {
     achs.forEach(a=>{
       const status=claims[a.id], cls=status==='verified'?'done':status==='pending'?'pending':'', rc=RARITY_COLOR[a.rarity];
       const labelHtml=status==='verified'?`<div class="ach-card-label verified">✓ Verified</div>`:status==='pending'?`<div class="ach-card-label pending-lbl">⏳ Awaiting mod</div>`:`<div class="ach-card-label">Achievement</div>`;
-      html+=`<div class="ach-card ${cls}" onclick="tryClaimAch('${a.id}')"><div class="ach-card-bar"></div><div class="ach-card-icon-wrap"><div class="ach-card-icon">${a.icon}<div class="ach-rarity" style="background:${rc}22;color:${rc};">${a.rarity}</div></div></div><div class="ach-card-body">${labelHtml}<div class="ach-card-name">${a.name}</div><div class="ach-card-desc">${a.desc}</div></div><div class="ach-card-right"><div class="ach-pts">+${a.pts}</div><div class="ach-check-circle"></div></div></div>`;
+      html+=`<div class="ach-card ${cls}" onclick="tryClaimAch('${a.id}')"><div class="ach-card-bar"></div><div class="ach-card-icon-wrap"><div class="ach-card-icon">${a.icon}<div class="ach-rarity" style="background:${rc}22;color:${rc};">${a.rarity}</div></div></div><div class="ach-card-body">${labelHtml}<div class="ach-card-name">${a.name}</div><div class="ach-card-desc">${a.desc}</div></div><div class="ach-card-right"><div class="ach-check-circle"></div></div></div>`;
     });
   });
   document.getElementById('ach-list').innerHTML=html;
@@ -343,7 +342,7 @@ function renderAchievements() {
 function tryClaimAch(id) {
   const claims=DB.users[currentUser]?.claims||{}; if(claims[id]) return;
   const a=ACHIEVEMENTS.find(x=>x.id===id); pendingClaimId=id;
-  document.getElementById('modal-preview').innerHTML=`<div class="modal-icon-big">${a.icon}</div><div><div class="modal-ach-name">${a.name}</div><div class="modal-ach-desc">${a.desc}</div><div style="margin-top:6px;font-family:'Rajdhani',sans-serif;font-size:14px;color:var(--gold);">+${a.pts} pts</div></div>`;
+  document.getElementById('modal-preview').innerHTML=`<div class="modal-icon-big">${a.icon}</div><div><div class="modal-ach-name">${a.name}</div><div class="modal-ach-desc">${a.desc}</div></div>`;
   document.getElementById('modal').classList.add('open');
 }
 function closeModal() { document.getElementById('modal').classList.remove('open'); pendingClaimId=null; }
@@ -355,23 +354,23 @@ function confirmClaim() {
   saveDB(); closeModal(); renderAchievements();
 }
 function renderLeaderboard() {
-  const rows=Object.entries(DB.users).filter(([,d])=>!d.isMod).map(([u,d])=>({u,pts:getUserPts(u),count:Object.values(d.claims||{}).filter(v=>v==='verified').length,period:d.period})).sort((a,b)=>b.pts-a.pts);
+  const rows=Object.entries(DB.users).filter(([,d])=>!d.isMod).map(([u,d])=>({u,count:Object.values(d.claims||{}).filter(v=>v==='verified').length,period:d.period})).sort((a,b)=>b.count-a.count);
   const medals=['🥇','🥈','🥉'];
-  document.getElementById('lb-list').innerHTML=rows.length?rows.map((r,i)=>`<div class="lb-row ${r.u===currentUser?'me':''}"><div class="lb-rank">${medals[i]||i+1}</div><div class="avatar" style="width:34px;height:34px;font-size:14px;">${r.u[0].toUpperCase()}</div><div class="lb-name">${r.u}${r.u===currentUser?' <span style="font-size:11px;color:var(--accent2);background:rgba(124,58,237,0.15);padding:2px 8px;border-radius:999px;">you</span>':''}<div class="lb-period">${r.period||''} · ${r.count} achievement${r.count!==1?'s':''}</div></div><div class="lb-pts">${r.pts} pts</div></div>`).join(''):`<div class="empty-state">No scores yet — go earn some achievements!</div>`;
+  document.getElementById('lb-list').innerHTML=rows.length?rows.map((r,i)=>`<div class="lb-row ${r.u===currentUser?'me':''}"><div class="lb-rank">${medals[i]||i+1}</div><div class="avatar" style="width:34px;height:34px;font-size:14px;">${r.u[0].toUpperCase()}</div><div class="lb-name">${r.u}${r.u===currentUser?' <span style="font-size:11px;color:var(--accent2);background:rgba(124,58,237,0.15);padding:2px 8px;border-radius:999px;">you</span>':''}<div class="lb-period">${r.period||''}</div></div><div class="lb-pts">${r.count} / ${ACHIEVEMENTS.length}</div></div>`).join(''):`<div class="empty-state">No scores yet — go earn some achievements!</div>`;
 }
 function renderModQueue() {
   const pending=DB.claims.filter(c=>DB.users[c.user]?.claims?.[c.achId]==='pending');
   const totalVerified=Object.values(DB.users).reduce((s,u)=>s+Object.values(u.claims||{}).filter(v=>v==='verified').length,0);
   const totalStudents=Object.keys(DB.users).filter(u=>!DB.users[u].isMod).length;
   document.getElementById('mod-stats').innerHTML=`<div class="stat-box"><div class="stat-num">${pending.length}</div><div class="stat-lbl">Pending</div></div><div class="stat-box"><div class="stat-num">${totalVerified}</div><div class="stat-lbl">Verified</div></div><div class="stat-box"><div class="stat-num">${totalStudents}</div><div class="stat-lbl">Students</div></div>`;
-  document.getElementById('mod-queue').innerHTML=pending.length?pending.map((c,i)=>{const a=ACHIEVEMENTS.find(x=>x.id===c.achId),user=DB.users[c.user];return`<div class="mod-card"><div class="mod-card-header"><div class="mod-student">${c.user}</div><div class="mod-period">${user?.period||'?'}</div></div><div class="mod-ach"><div class="mod-ach-icon">${a?.icon}</div><div><div class="mod-ach-name">${a?.name} <span style="color:var(--gold);font-size:14px;">+${a?.pts}pts</span></div><div class="mod-ach-desc">${a?.desc}</div></div></div><div class="mod-actions"><button class="btn btn-green btn-sm" onclick="modDecide(${i},'verify')">✓ Verify</button><button class="btn btn-red btn-sm" onclick="modDecide(${i},'deny')">✗ Deny</button></div></div>`;}).join(''):`<div class="empty-state"><div style="font-size:40px;margin-bottom:12px;">✅</div>All caught up! No pending claims.</div>`;
+  document.getElementById('mod-queue').innerHTML=pending.length?pending.map((c,i)=>{const a=ACHIEVEMENTS.find(x=>x.id===c.achId),user=DB.users[c.user];return`<div class="mod-card"><div class="mod-card-header"><div class="mod-student">${c.user}</div><div class="mod-period">${user?.period||'?'}</div></div><div class="mod-ach"><div class="mod-ach-icon">${a?.icon}</div><div><div class="mod-ach-name">${a?.name}</div><div class="mod-ach-desc">${a?.desc}</div></div></div><div class="mod-actions"><button class="btn btn-green btn-sm" onclick="modDecide(${i},'verify')">✓ Verify</button><button class="btn btn-red btn-sm" onclick="modDecide(${i},'deny')">✗ Deny</button></div></div>`;}).join(''):`<div class="empty-state"><div style="font-size:40px;margin-bottom:12px;">✅</div>All caught up! No pending claims.</div>`;
 }
 function modDecide(idx,decision) {
   const pending=DB.claims.filter(c=>DB.users[c.user]?.claims?.[c.achId]==='pending');
   const claim=pending[idx]; if(!claim) return;
   const a=ACHIEVEMENTS.find(x=>x.id===claim.achId);
   DB.users[claim.user].claims[claim.achId]=decision==='verify'?'verified':'denied';
-  if(decision==='verify') showPopup(`${claim.user} earned "${a?.name}" — +${a?.pts}pts`);
+  if(decision==='verify') showPopup(`${claim.user} unlocked "${a?.name}"!`);
   DB.claims=DB.claims.filter(c=>!(c.user===claim.user&&c.achId===claim.achId));
   saveDB(); renderModQueue();
 }
