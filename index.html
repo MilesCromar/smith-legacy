@@ -213,14 +213,13 @@
 <!-- MAIN APP -->
 <div class="page" id="page-achievements">
   <nav class="nav">
-    <div style="min-width:120px;display:flex;align-items:center;">
-      <button class="nav-tab" id="mod-tab-btn" style="display:none;" onclick="showTab('mod')">Mod Panel</button>
-    </div>
+    <div class="nav-logo">SMITH LEGACY</div>
     <div class="nav-tabs">
+      <button class="nav-tab" id="mod-tab-btn" style="display:none;" onclick="showTab('mod')">Mod Panel</button>
       <button class="nav-tab active" onclick="showTab('achievements')">Achievements</button>
       <button class="nav-tab" onclick="showTab('leaderboard')">Leaderboard</button>
     </div>
-    <div class="nav-right" style="min-width:120px;justify-content:flex-end;">
+    <div class="nav-right">
       <div class="avatar" id="nav-avatar">?</div>
       <span class="logout" onclick="doLogout()">logout</span>
     </div>
