@@ -277,20 +277,37 @@ firebase.initializeApp({
 const db = firebase.firestore();
 
 const ACHIEVEMENTS = [
-  { id:'a1',  icon:'📚', name:'Started Early',      desc:'Actually opens the book before Mr. Smith says to', rarity:'Common' },
-  { id:'a2',  icon:'✋', name:'First Hand Up',       desc:'First to raise your hand after a question is asked', rarity:'Common' },
-  { id:'a3',  icon:'😴', name:'Almost Asleep',       desc:'Caught yourself (or almost) falling asleep in class', rarity:'Common' },
-  { id:'a4',  icon:'💬', name:'Side Quest',          desc:'Got Mr. Smith off topic for 2+ full minutes', rarity:'Uncommon' },
-  { id:'a5',  icon:'🔁', name:'Repeat Offender',     desc:'Asked Mr. Smith to repeat something he just said', rarity:'Common' },
-  { id:'a6',  icon:'🎯', name:'Right on Time',       desc:'Gave the exact answer Mr. Smith was clearly looking for', rarity:'Uncommon' },
-  { id:'a7',  icon:'🤔', name:'Big Brain Question',  desc:'Asked a question that made Mr. Smith pause and think', rarity:'Uncommon' },
-  { id:'a8',  icon:'📝', name:'Speed Notes',         desc:'Filled an entire page of notes in one class', rarity:'Common' },
-  { id:'a9',  icon:'🤫', name:'Dead Silence',        desc:'The whole class went quiet for an awkward 5+ seconds', rarity:'Uncommon' },
-  { id:'a10', icon:'🏃', name:'Out the Door',        desc:'Fully packed up before the bell even rang', rarity:'Common' },
-  { id:'a11', icon:'😂', name:'Class Laughed',       desc:'Said something that made the whole class crack up', rarity:'Rare' },
-  { id:'a12', icon:'🌟', name:'Mr. Smith Approved',  desc:'Earned a "great point" or "exactly right" from Mr. Smith', rarity:'Rare' },
+  // Easy
+  { id:'a1',  icon:'📚', name:'Started Early',       desc:'Actually opens the book before Mr. Smith says to', rarity:'Easy' },
+  { id:'a5',  icon:'🔁', name:'Repeat Offender',      desc:'Asked Mr. Smith to repeat something he just said', rarity:'Easy' },
+  { id:'a13', icon:'🙊', name:'Shushed',              desc:'Got personally shushed by Mr. Smith mid-conversation', rarity:'Easy' },
+  { id:'a14', icon:'🫢', name:'Buttttt...',           desc:'Mr. Smith hits you with the drawn-out "but..." before flipping your argument', rarity:'Easy' },
+  { id:'a15', icon:'👆', name:'Please Look Up',       desc:'Mr. Smith had to specifically tell you to look up or look at the board', rarity:'Easy' },
+  { id:'a16', icon:'🗣️', name:'Alright People',      desc:'Witnessed Mr. Smith open class with his classic "alright people" or "ok people"', rarity:'Easy' },
+  // Normal
+  { id:'a4',  icon:'💬', name:'Side Quest',           desc:'Got Mr. Smith off topic for at least 1 full minute', rarity:'Normal' },
+  { id:'a6',  icon:'🎯', name:'Right on Time',        desc:'Gave the exact answer Mr. Smith was clearly fishing for', rarity:'Normal' },
+  { id:'a17', icon:'👀', name:'Death Stare',          desc:'Made direct eye contact with Mr. Smith\'s full-power death stare', rarity:'Normal' },
+  { id:'a18', icon:'🍬', name:'Gum Suspect',          desc:'Mr. Smith thought you had gum — guilty or not', rarity:'Normal' },
+  { id:'a19', icon:'💻', name:'Canvas Run',           desc:'Mr. Smith sent the whole class straight to Canvas modules instead of teaching', rarity:'Normal' },
+  { id:'a20', icon:'🎤', name:'On a Rant',            desc:'Mr. Smith went on a full unprompted rant about something totally unrelated', rarity:'Normal' },
+  { id:'a21', icon:'📱', name:'YouTube Shorts',       desc:'Mr. Smith brought up YouTube Shorts in class for no clear reason', rarity:'Normal' },
+  { id:'a22', icon:'🥤', name:'Happy Juice',          desc:'Spotted Mr. Smith sipping from the legendary happy juice cup', rarity:'Normal' },
+  { id:'a23', icon:'🎓', name:'Professor Mode',       desc:'Mr. Smith went off about his professor for 30+ seconds straight', rarity:'Normal' },
+  { id:'a24', icon:'😶', name:'Zoned Out',            desc:'Caught Mr. Smith completely zoning out mid-sentence', rarity:'Normal' },
+  // Hard
+  { id:'a7',  icon:'🤔', name:'Big Brain Question',   desc:'Asked a question that made Mr. Smith actually pause and think', rarity:'Hard' },
+  { id:'a9',  icon:'🤫', name:'Dead Silence',         desc:'The whole class went dead quiet for an awkward 5+ seconds', rarity:'Hard' },
+  { id:'a11', icon:'😂', name:'Class Laughed',        desc:'Said something that made the entire class crack up', rarity:'Hard' },
+  { id:'a12', icon:'🌟', name:'Mr. Smith Approved',   desc:'Earned a genuine "great point" or "exactly right" from Mr. Smith', rarity:'Hard' },
+  { id:'a25', icon:'🤙', name:'Gen Z Attempt',        desc:'Mr. Smith tried to use Gen Z slang and it was genuinely painful to witness', rarity:'Hard' },
+  { id:'a26', icon:'🛑', name:'Stop... SPEAKING',     desc:'Mr. Smith hit you with the full "stop... speaking" — pause included', rarity:'Hard' },
+  { id:'a27', icon:'⚠️', name:'Detention Threat',    desc:'Mr. Smith threatened someone in the class with detention', rarity:'Hard' },
+  { id:'a28', icon:'😡', name:'Actually Mad',         desc:'Mr. Smith got genuinely, visibly mad at the class — not just annoyed', rarity:'Hard' },
+  // Extreme
+  { id:'a29', icon:'⚡', name:'Whole Class Freeze',   desc:'The entire class sat still and said absolutely nothing for a full class period — Mr. Smith had no idea what to do', rarity:'Extreme' },
 ];
-const RARITY_COLOR = { Common:'#6b7280', Uncommon:'#818cf8', Rare:'#f59e0b' };
+const RARITY_COLOR = { Easy:'#5a7585', Normal:'#6a9fbe', Hard:'#c47830', Extreme:'#c0392b' };
 
 let currentUser = null;
 let currentUserData = null;
@@ -366,7 +383,7 @@ function renderAchievements() {
   document.getElementById('prog-count').textContent=`${verifiedCount} / ${ACHIEVEMENTS.length} unlocked`;
   document.getElementById('prog-period').textContent=currentUserData?.period||'';
   document.getElementById('prog-done-label').textContent=`${verifiedCount} of ${ACHIEVEMENTS.length} unlocked`;
-  const groups=[['Common',ACHIEVEMENTS.filter(a=>a.rarity==='Common')],['Uncommon',ACHIEVEMENTS.filter(a=>a.rarity==='Uncommon')],['Rare',ACHIEVEMENTS.filter(a=>a.rarity==='Rare')]];
+  const groups=[['Easy',ACHIEVEMENTS.filter(a=>a.rarity==='Easy')],['Normal',ACHIEVEMENTS.filter(a=>a.rarity==='Normal')],['Hard',ACHIEVEMENTS.filter(a=>a.rarity==='Hard')],['Extreme',ACHIEVEMENTS.filter(a=>a.rarity==='Extreme')]];
   let html='';
   groups.forEach(([label,achs])=>{
     html+=`<div class="ach-section-label" style="color:${RARITY_COLOR[label]}">${label}</div>`;
