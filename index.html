@@ -272,74 +272,108 @@
   </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script>
+firebase.initializeApp({
+  apiKey: "AIzaSyCl1FLsV06Ws7XfFdCQjaExwhv6UfcQUFE",
+  authDomain: "smith-legacy.firebaseapp.com",
+  projectId: "smith-legacy",
+  storageBucket: "smith-legacy.firebasestorage.app",
+  messagingSenderId: "81203960943",
+  appId: "1:81203960943:web:ea367eeb4ab73c24acc19a"
+});
+const db = firebase.firestore();
+
 const ACHIEVEMENTS = [
-  { id:'a1',  icon:'📚', name:'Started Early',      desc:'Actually opens the book before Mr. Smith says to', pts:10, rarity:'Common' },
-  { id:'a2',  icon:'✋', name:'First Hand Up',       desc:'First to raise your hand after a question is asked', pts:15, rarity:'Common' },
-  { id:'a3',  icon:'😴', name:'Almost Asleep',       desc:'Caught yourself (or almost) falling asleep in class', pts:5,  rarity:'Common' },
-  { id:'a4',  icon:'💬', name:'Side Quest',          desc:'Got Mr. Smith off topic for 2+ full minutes', pts:20, rarity:'Uncommon' },
-  { id:'a5',  icon:'🔁', name:'Repeat Offender',     desc:'Asked Mr. Smith to repeat something he just said', pts:5,  rarity:'Common' },
-  { id:'a6',  icon:'🎯', name:'Right on Time',       desc:'Gave the exact answer Mr. Smith was clearly looking for', pts:25, rarity:'Uncommon' },
-  { id:'a7',  icon:'🤔', name:'Big Brain Question',  desc:'Asked a question that made Mr. Smith pause and think', pts:20, rarity:'Uncommon' },
-  { id:'a8',  icon:'📝', name:'Speed Notes',         desc:'Filled an entire page of notes in one class', pts:15, rarity:'Common' },
-  { id:'a9',  icon:'🤫', name:'Dead Silence',        desc:'The whole class went quiet for an awkward 5+ seconds', pts:10, rarity:'Uncommon' },
-  { id:'a10', icon:'🏃', name:'Out the Door',        desc:'Fully packed up before the bell even rang', pts:5,  rarity:'Common' },
-  { id:'a11', icon:'😂', name:'Class Laughed',       desc:'Said something that made the whole class crack up', pts:30, rarity:'Rare' },
-  { id:'a12', icon:'🌟', name:'Mr. Smith Approved',  desc:'Earned a "great point" or "exactly right" from Mr. Smith', pts:35, rarity:'Rare' },
+  { id:'a1',  icon:'📚', name:'Started Early',      desc:'Actually opens the book before Mr. Smith says to', rarity:'Common' },
+  { id:'a2',  icon:'✋', name:'First Hand Up',       desc:'First to raise your hand after a question is asked', rarity:'Common' },
+  { id:'a3',  icon:'😴', name:'Almost Asleep',       desc:'Caught yourself (or almost) falling asleep in class', rarity:'Common' },
+  { id:'a4',  icon:'💬', name:'Side Quest',          desc:'Got Mr. Smith off topic for 2+ full minutes', rarity:'Uncommon' },
+  { id:'a5',  icon:'🔁', name:'Repeat Offender',     desc:'Asked Mr. Smith to repeat something he just said', rarity:'Common' },
+  { id:'a6',  icon:'🎯', name:'Right on Time',       desc:'Gave the exact answer Mr. Smith was clearly looking for', rarity:'Uncommon' },
+  { id:'a7',  icon:'🤔', name:'Big Brain Question',  desc:'Asked a question that made Mr. Smith pause and think', rarity:'Uncommon' },
+  { id:'a8',  icon:'📝', name:'Speed Notes',         desc:'Filled an entire page of notes in one class', rarity:'Common' },
+  { id:'a9',  icon:'🤫', name:'Dead Silence',        desc:'The whole class went quiet for an awkward 5+ seconds', rarity:'Uncommon' },
+  { id:'a10', icon:'🏃', name:'Out the Door',        desc:'Fully packed up before the bell even rang', rarity:'Common' },
+  { id:'a11', icon:'😂', name:'Class Laughed',       desc:'Said something that made the whole class crack up', rarity:'Rare' },
+  { id:'a12', icon:'🌟', name:'Mr. Smith Approved',  desc:'Earned a "great point" or "exactly right" from Mr. Smith', rarity:'Rare' },
 ];
 const RARITY_COLOR = { Common:'#6b7280', Uncommon:'#818cf8', Rare:'#f59e0b' };
-const STORAGE_KEY = 'smithLegacyDB';
-
-function freshDB() {
-  return { users: { thecreator: { pass:'1234', isMod:true, period:null, claims:{} } }, claims:[] };
-}
-
-let DB = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-if (!DB) { DB = freshDB(); saveDB(); }
-if (!DB.users['thecreator'] || !DB.users['thecreator'].isMod) {
-  DB.users['thecreator'] = { pass:'1234', isMod:true, period:null, claims:{} }; saveDB();
-}
-
-function saveDB() { localStorage.setItem(STORAGE_KEY, JSON.stringify(DB)); }
 
 let currentUser = null;
+let currentUserData = null;
 let pendingClaimId = null;
+let unsubscribeUser = null;
+let unsubscribeClaims = null;
+
+// Ensure mod account exists
+db.collection('users').doc('thecreator').get().then(doc => {
+  if (!doc.exists) db.collection('users').doc('thecreator').set({ pass:'1234', isMod:true, period:null, claims:{} });
+});
 
 function goto(id) { document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
 
-function doSignup() {
+async function doSignup() {
   const u=document.getElementById('su-user').value.trim().toLowerCase(), p=document.getElementById('su-pass').value, period=document.getElementById('su-period').value, err=document.getElementById('su-err');
   if(!u||!p||!period){err.textContent='Please fill in all fields.';return;}
   if(!/^\d{4}$/.test(p)){err.textContent='Password must be exactly 4 digits.';return;}
   if(u==='thecreator'){err.textContent='That username is taken.';return;}
-  if(DB.users[u]){err.textContent='Username already taken.';return;}
-  DB.users[u]={pass:p,isMod:false,period,claims:{}}; saveDB(); loginAs(u);
+  const doc=await db.collection('users').doc(u).get();
+  if(doc.exists){err.textContent='Username already taken.';return;}
+  const data={pass:p,isMod:false,period,claims:{}};
+  await db.collection('users').doc(u).set(data);
+  loginAs(u,data);
 }
-function doLogin() {
+async function doLogin() {
   const u=document.getElementById('login-user').value.trim().toLowerCase(), p=document.getElementById('login-pass').value, err=document.getElementById('login-err');
-  if(!DB.users[u]||DB.users[u].pass!==p){err.textContent='Wrong username or password.';return;}
-  if(DB.users[u].isMod){loginMod(u);return;} loginAs(u);
+  const doc=await db.collection('users').doc(u).get();
+  if(!doc.exists||doc.data().pass!==p){err.textContent='Wrong username or password.';return;}
+  const data=doc.data();
+  if(data.isMod){loginMod(u,data);return;}
+  loginAs(u,data);
 }
-function doModLogin() {
+async function doModLogin() {
   const u=document.getElementById('mod-user').value.trim().toLowerCase(), p=document.getElementById('mod-pass').value, err=document.getElementById('mod-err');
-  if(!DB.users[u]||DB.users[u].pass!==p||!DB.users[u].isMod){err.textContent='Invalid mod credentials.';return;} loginMod(u);
+  const doc=await db.collection('users').doc(u).get();
+  if(!doc.exists||doc.data().pass!==p||!doc.data().isMod){err.textContent='Invalid mod credentials.';return;}
+  loginMod(u,doc.data());
 }
-function loginAs(u) { currentUser=u; document.getElementById('nav-avatar').textContent=u[0].toUpperCase(); renderAchievements(); goto('page-achievements'); }
-function loginMod(u) { currentUser=u; document.getElementById('mod-name-nav').textContent=u.toUpperCase(); renderModQueue(); goto('page-mod'); }
-function doLogout() { currentUser=null; document.getElementById('login-err').textContent=''; document.getElementById('login-user').value=''; document.getElementById('login-pass').value=''; goto('page-login'); }
+function loginAs(u,data) {
+  currentUser=u; currentUserData=data;
+  document.getElementById('nav-avatar').textContent=u[0].toUpperCase();
+  if(unsubscribeUser) unsubscribeUser();
+  unsubscribeUser=db.collection('users').doc(u).onSnapshot(doc=>{ currentUserData=doc.data(); renderAchievements(); });
+  goto('page-achievements');
+}
+function loginMod(u,data) {
+  currentUser=u;
+  document.getElementById('mod-name-nav').textContent=u.toUpperCase();
+  if(unsubscribeClaims) unsubscribeClaims();
+  unsubscribeClaims=db.collection('claims').onSnapshot(()=>renderModQueue());
+  goto('page-mod');
+}
+function doLogout() {
+  if(unsubscribeUser){unsubscribeUser();unsubscribeUser=null;}
+  if(unsubscribeClaims){unsubscribeClaims();unsubscribeClaims=null;}
+  currentUser=null; currentUserData=null;
+  document.getElementById('login-err').textContent='';
+  document.getElementById('login-user').value='';
+  document.getElementById('login-pass').value='';
+  goto('page-login');
+}
 function showTab(tab) {
   document.getElementById('tab-achievements').style.display=tab==='achievements'?'block':'none';
   document.getElementById('tab-leaderboard').style.display=tab==='leaderboard'?'block':'none';
   document.querySelectorAll('.nav-tab').forEach((t,i)=>t.classList.toggle('active',i===(tab==='achievements'?0:1)));
   if(tab==='leaderboard') renderLeaderboard();
 }
-function getUserCount(u) { return Object.values(DB.users[u]?.claims||{}).filter(v=>v==='verified').length; }
 function renderAchievements() {
-  const claims=DB.users[currentUser]?.claims||{}, user=DB.users[currentUser];
+  const claims=currentUserData?.claims||{};
   const verifiedCount=Object.values(claims).filter(v=>v==='verified').length;
   document.getElementById('prog-fill').style.width=`${Math.round(verifiedCount/ACHIEVEMENTS.length*100)}%`;
   document.getElementById('prog-count').textContent=`${verifiedCount} / ${ACHIEVEMENTS.length} unlocked`;
-  document.getElementById('prog-period').textContent=user?.period||'';
+  document.getElementById('prog-period').textContent=currentUserData?.period||'';
   document.getElementById('prog-done-label').textContent=`${verifiedCount} of ${ACHIEVEMENTS.length} unlocked`;
   const groups=[['Common',ACHIEVEMENTS.filter(a=>a.rarity==='Common')],['Uncommon',ACHIEVEMENTS.filter(a=>a.rarity==='Uncommon')],['Rare',ACHIEVEMENTS.filter(a=>a.rarity==='Rare')]];
   let html='';
@@ -354,48 +388,50 @@ function renderAchievements() {
   document.getElementById('ach-list').innerHTML=html;
 }
 function tryClaimAch(id) {
-  const claims=DB.users[currentUser]?.claims||{}; if(claims[id]) return;
+  const claims=currentUserData?.claims||{}; if(claims[id]) return;
   const a=ACHIEVEMENTS.find(x=>x.id===id); pendingClaimId=id;
   document.getElementById('modal-preview').innerHTML=`<div class="modal-icon-big">${a.icon}</div><div><div class="modal-ach-name">${a.name}</div><div class="modal-ach-desc">${a.desc}</div></div>`;
   document.getElementById('modal').classList.add('open');
 }
 function closeModal() { document.getElementById('modal').classList.remove('open'); pendingClaimId=null; }
-function confirmClaim() {
+async function confirmClaim() {
   if(!pendingClaimId) return;
-  if(!DB.users[currentUser].claims) DB.users[currentUser].claims={};
-  DB.users[currentUser].claims[pendingClaimId]='pending';
-  DB.claims.push({user:currentUser,achId:pendingClaimId,time:Date.now()});
-  saveDB(); closeModal(); renderAchievements();
+  const batch=db.batch();
+  batch.update(db.collection('users').doc(currentUser),{[`claims.${pendingClaimId}`]:'pending'});
+  batch.set(db.collection('claims').doc(),{user:currentUser,achId:pendingClaimId,time:Date.now()});
+  await batch.commit();
+  closeModal();
 }
-function renderLeaderboard() {
-  const rows=Object.entries(DB.users).filter(([,d])=>!d.isMod).map(([u,d])=>({u,count:Object.values(d.claims||{}).filter(v=>v==='verified').length,period:d.period})).sort((a,b)=>b.count-a.count);
+async function renderLeaderboard() {
+  document.getElementById('lb-list').innerHTML='<div class="empty-state">Loading...</div>';
+  const snap=await db.collection('users').get();
+  const rows=[];
+  snap.forEach(doc=>{ const d=doc.data(); if(!d.isMod) rows.push({u:doc.id,count:Object.values(d.claims||{}).filter(v=>v==='verified').length,period:d.period}); });
+  rows.sort((a,b)=>b.count-a.count);
   const medals=['🥇','🥈','🥉'];
   document.getElementById('lb-list').innerHTML=rows.length?rows.map((r,i)=>`<div class="lb-row ${r.u===currentUser?'me':''}"><div class="lb-rank">${medals[i]||i+1}</div><div class="avatar" style="width:34px;height:34px;font-size:14px;">${r.u[0].toUpperCase()}</div><div class="lb-name">${r.u}${r.u===currentUser?' <span style="font-size:11px;color:var(--accent2);background:rgba(61,110,138,0.18);padding:2px 8px;border-radius:999px;">you</span>':''}<div class="lb-period">${r.period||''}</div></div><div class="lb-pts">${r.count} / ${ACHIEVEMENTS.length}</div></div>`).join(''):`<div class="empty-state">No scores yet — go earn some achievements!</div>`;
 }
-function renderModQueue() {
-  const pending=DB.claims.filter(c=>DB.users[c.user]?.claims?.[c.achId]==='pending');
-  const totalVerified=Object.values(DB.users).reduce((s,u)=>s+Object.values(u.claims||{}).filter(v=>v==='verified').length,0);
-  const totalStudents=Object.keys(DB.users).filter(u=>!DB.users[u].isMod).length;
+async function renderModQueue() {
+  const claimsSnap=await db.collection('claims').get();
+  const pending=[];
+  claimsSnap.forEach(doc=>pending.push({id:doc.id,...doc.data()}));
+  const usersSnap=await db.collection('users').get();
+  let totalVerified=0, totalStudents=0;
+  const userMap={};
+  usersSnap.forEach(doc=>{ const d=doc.data(); userMap[doc.id]=d; if(!d.isMod){totalStudents++; totalVerified+=Object.values(d.claims||{}).filter(v=>v==='verified').length;} });
   document.getElementById('mod-stats').innerHTML=`<div class="stat-box"><div class="stat-num">${pending.length}</div><div class="stat-lbl">Pending</div></div><div class="stat-box"><div class="stat-num">${totalVerified}</div><div class="stat-lbl">Verified</div></div><div class="stat-box"><div class="stat-num">${totalStudents}</div><div class="stat-lbl">Students</div></div>`;
-  document.getElementById('mod-queue').innerHTML=pending.length?pending.map((c,i)=>{const a=ACHIEVEMENTS.find(x=>x.id===c.achId),user=DB.users[c.user];return`<div class="mod-card"><div class="mod-card-header"><div class="mod-student">${c.user}</div><div class="mod-period">${user?.period||'?'}</div></div><div class="mod-ach"><div class="mod-ach-icon">${a?.icon}</div><div><div class="mod-ach-name">${a?.name}</div><div class="mod-ach-desc">${a?.desc}</div></div></div><div class="mod-actions"><button class="btn btn-green btn-sm" onclick="modDecide(${i},'verify')">✓ Verify</button><button class="btn btn-red btn-sm" onclick="modDecide(${i},'deny')">✗ Deny</button></div></div>`;}).join(''):`<div class="empty-state"><div style="font-size:40px;margin-bottom:12px;">✅</div>All caught up! No pending claims.</div>`;
+  document.getElementById('mod-queue').innerHTML=pending.length?pending.map(c=>{const a=ACHIEVEMENTS.find(x=>x.id===c.achId),u=userMap[c.user];return`<div class="mod-card"><div class="mod-card-header"><div class="mod-student">${c.user}</div><div class="mod-period">${u?.period||'?'}</div></div><div class="mod-ach"><div class="mod-ach-icon">${a?.icon}</div><div><div class="mod-ach-name">${a?.name}</div><div class="mod-ach-desc">${a?.desc}</div></div></div><div class="mod-actions"><button class="btn btn-green btn-sm" onclick="modDecide('${c.id}','${c.user}','${c.achId}','verify')">✓ Verify</button><button class="btn btn-red btn-sm" onclick="modDecide('${c.id}','${c.user}','${c.achId}','deny')">✗ Deny</button></div></div>`;}).join(''):`<div class="empty-state"><div style="font-size:40px;margin-bottom:12px;">✅</div>All caught up! No pending claims.</div>`;
 }
-function modDecide(idx,decision) {
-  const pending=DB.claims.filter(c=>DB.users[c.user]?.claims?.[c.achId]==='pending');
-  const claim=pending[idx]; if(!claim) return;
-  const a=ACHIEVEMENTS.find(x=>x.id===claim.achId);
-  DB.users[claim.user].claims[claim.achId]=decision==='verify'?'verified':'denied';
-  if(decision==='verify') showPopup(`${claim.user} unlocked "${a?.name}"!`);
-  DB.claims=DB.claims.filter(c=>!(c.user===claim.user&&c.achId===claim.achId));
-  saveDB(); renderModQueue();
+async function modDecide(claimDocId,user,achId,decision) {
+  const a=ACHIEVEMENTS.find(x=>x.id===achId);
+  const batch=db.batch();
+  batch.update(db.collection('users').doc(user),{[`claims.${achId}`]:decision==='verify'?'verified':'denied'});
+  batch.delete(db.collection('claims').doc(claimDocId));
+  await batch.commit();
+  if(decision==='verify') showPopup(`${user} unlocked "${a?.name}"!`);
 }
-function refreshAchievements() {
-  DB = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || freshDB();
-  renderAchievements();
-}
-function refreshModQueue() {
-  DB = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || freshDB();
-  renderModQueue();
-}
+function refreshAchievements() { if(currentUserData) renderAchievements(); }
+function refreshModQueue() { renderModQueue(); }
 document.fonts.ready.then(() => {
   const c = document.createElement('canvas'); c.width = 64; c.height = 64;
   const ctx = c.getContext('2d');
