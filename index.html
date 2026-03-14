@@ -177,7 +177,7 @@
     <div class="card">
       <div style="font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:600;margin-bottom:1.5rem;letter-spacing:1px;">Sign up</div>
       <div class="field"><label>Username</label><input id="su-user" type="text" placeholder="choose a username"></div>
-      <div class="field"><label>Password</label><input id="su-pass" type="password" placeholder="••••••••"></div>
+      <div class="field"><label>Password (4-digit PIN)</label><input id="su-pass" type="password" placeholder="4 digits" maxlength="4" inputmode="numeric" pattern="[0-9]{4}"></div>
       <div class="field"><label>Period</label>
         <select id="su-period">
           <option value="">Select your period</option>
@@ -309,6 +309,7 @@ function goto(id) { document.querySelectorAll('.page').forEach(p=>p.classList.re
 function doSignup() {
   const u=document.getElementById('su-user').value.trim().toLowerCase(), p=document.getElementById('su-pass').value, period=document.getElementById('su-period').value, err=document.getElementById('su-err');
   if(!u||!p||!period){err.textContent='Please fill in all fields.';return;}
+  if(!/^\d{4}$/.test(p)){err.textContent='Password must be exactly 4 digits.';return;}
   if(u==='thecreator'){err.textContent='That username is taken.';return;}
   if(DB.users[u]){err.textContent='Username already taken.';return;}
   DB.users[u]={pass:p,isMod:false,period,claims:{}}; saveDB(); loginAs(u);
