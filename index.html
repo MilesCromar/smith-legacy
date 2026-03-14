@@ -399,6 +399,7 @@ function refreshModQueue() {
 document.fonts.ready.then(() => {
   const c = document.createElement('canvas'); c.width = 64; c.height = 64;
   const ctx = c.getContext('2d');
+  ctx.beginPath(); ctx.roundRect(0, 0, 64, 64, 20); ctx.clip();
   ctx.fillStyle = '#0a1219'; ctx.fillRect(0, 0, 64, 64);
   const glow = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
   glow.addColorStop(0, 'rgba(61,110,138,0.4)'); glow.addColorStop(1, 'rgba(61,110,138,0)');
