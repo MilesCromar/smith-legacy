@@ -360,6 +360,8 @@ async function doModLogin() {
 function loginAs(u,data) {
   currentUser=u; currentUserData=data;
   document.getElementById('nav-avatar').textContent=u[0].toUpperCase();
+  document.getElementById('login-user').value='';
+  document.getElementById('login-pass').value='';
   if(unsubscribeUser) unsubscribeUser();
   unsubscribeUser=db.collection('users').doc(u).onSnapshot(doc=>{ currentUserData=doc.data(); renderAchievements(); });
   goto('page-achievements');
