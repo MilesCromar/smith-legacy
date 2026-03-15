@@ -172,8 +172,8 @@
     <div class="logo-sub">Achievement System</div>
     <div class="card">
       <div style="font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:600;margin-bottom:1.5rem;letter-spacing:1px;">Sign in</div>
-      <div class="field"><label>Username</label><input id="login-user" type="text" placeholder="your username"></div>
-      <div class="field"><label>Password</label><input id="login-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="field"><label>Username</label><input id="login-user" type="text" placeholder="your username" data-lpignore="true" autocomplete="off"></div>
+      <div class="field"><label>Password</label><input id="login-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" data-lpignore="true" autocomplete="off"></div>
       <div class="err" id="login-err"></div>
       <button class="btn" onclick="doLogin()" style="margin-top:8px;">Sign in</button>
     </div>
@@ -189,8 +189,8 @@
     <div class="logo-sub">Create Account</div>
     <div class="card">
       <div style="font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:600;margin-bottom:1.5rem;letter-spacing:1px;">Sign up</div>
-      <div class="field"><label>Username</label><input id="su-user" type="text" placeholder="choose a username"></div>
-      <div class="field"><label>Password (4-digit PIN)</label><input id="su-pass" type="password" placeholder="4 digits" maxlength="4" inputmode="numeric" pattern="[0-9]{4}"></div>
+      <div class="field"><label>Username</label><input id="su-user" type="text" placeholder="choose a username" data-lpignore="true" autocomplete="off"></div>
+      <div class="field"><label>Password (4-digit PIN)</label><input id="su-pass" type="password" placeholder="4 digits" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" data-lpignore="true" autocomplete="off"></div>
       <div class="field"><label>Period</label>
         <select id="su-period">
           <option value="">Select your period</option>
@@ -213,8 +213,8 @@
     <div class="card" style="border-color:rgba(245,158,11,0.2);">
       <div style="font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:600;margin-bottom:4px;letter-spacing:1px;color:var(--gold);">MOD SIGN IN</div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:1.5rem;">Moderators only — verify achievements here</div>
-      <div class="field"><label>Mod Username</label><input id="mod-user" type="text" placeholder="mod username"></div>
-      <div class="field"><label>Mod Password</label><input id="mod-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doModLogin()"></div>
+      <div class="field"><label>Mod Username</label><input id="mod-user" type="text" placeholder="mod username" data-lpignore="true" autocomplete="off"></div>
+      <div class="field"><label>Mod Password</label><input id="mod-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doModLogin()" data-lpignore="true" autocomplete="off"></div>
       <div class="err" id="mod-err"></div>
       <button class="btn" onclick="doModLogin()" style="background:linear-gradient(135deg,#b45309,#f59e0b);margin-top:8px;">Mod sign in</button>
     </div>
